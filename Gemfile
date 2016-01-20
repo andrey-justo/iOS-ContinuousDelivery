@@ -1,0 +1,12 @@
+source 'https://rubygems.org'
+
+gem 'cocoapods'
+gem 'cocoapods-deintegrate'
+gem 'xcpretty'
+gem 'fastlane', '~> 1.49'
+gem 'mini_magick'
+gem 'graphicsmagick', '~> 1.0', '>= 1.0.5'
+gem 'scan', '~> 0.3.3'
+gem 'pilot', '~> 1.2.1'
+gem 'deliver', '~> 1.7', '>= 1.7.0'
+gem 'badge', '~> 0.0.4'

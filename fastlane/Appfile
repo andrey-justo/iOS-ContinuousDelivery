@@ -1,0 +1,13 @@
+for_platform "ios" do
+  app_identifier "com.mycompany.yourapp" # The bundle identifier of your app
+  apple_id "" # Your Apple email address
+      
+  for_lane "beta" do
+    app_identifier "com.mycompany.yourapp"
+  end
+
+  for_lane "deploy" do
+    app_identifier "com.mycompany.yourapp"
+  end
+end
+

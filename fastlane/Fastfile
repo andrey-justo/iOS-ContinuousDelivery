@@ -1,0 +1,157 @@
+# Customise this file, documentation can be found here:
+# https://github.com/KrauseFx/fastlane/tree/master/docs
+# All available actions: https://github.com/KrauseFx/fastlane/blob/master/docs/Actions.md
+# can also be listed using the `fastlane actions` command
+
+# Change the syntax highlighting to Ruby
+# All lines starting with a # are ignored when running `fastlane`
+
+# By default, fastlane will send which actions are used
+# No personal data is shared, more information on https://github.com/fastlane/enhancer
+# Uncomment the following line to opt out
+# opt_out_usage
+
+# If you want to automatically update fastlane if a new version is available:
+# update_fastlane
+
+# This is the minimum version number required.
+# Update this, if you use features of a newer version
+fastlane_version "1.49.0"
+
+default_platform :ios
+
+# Check this example: https://github.com/fastlane/examples/blob/master/MindNode/Fastfile
+
+platform :ios do
+  before_all do    
+
+    ENV["APP_ICON_DEV"] = "fastlane/dev-icon.png"
+    xcode_select(ENV["XCODE_PATH"])
+
+    if (ENV["BUILD_COCOAPODS"] == "true")
+    	cocoapods
+	  end
+
+	  if (ENV["BUILD_CARTHAGE"] == "true")
+      carthage(
+      	use_ssh: false,         # Use SSH for downloading GitHub repositories.
+      	use_submodules: false,  # Add dependencies as Git submodules.
+      	use_binaries: true,     # Check out dependency repositories even when prebuilt frameworks exist
+      	platform: "iOS",         # Define which platform to build for
+      	verbose: false
+    	)
+	  end
+    
+  end
+
+  desc "Submit a new Beta Build to Hockey App"
+  lane :beta do |options|
+
+  	ENV["CODE_SIGN_IDENTITY"] = ENV["CODE_SIGN_RELEASE"]
+  	reports_folder = "#{ENV['XCODE_BUILD_PATH']}/reports"
+
+    badge(custom: ENV["APP_ICON_DEV"])
+
+    increment_build_number(build_number: options[:build_number])
+
+    gym(
+        clean: true,
+        codesigning_identity: ENV["CODE_SIGN_IDENTITY"],
+        scheme:  ENV["XCODE_SCHEME_RELEASE"],
+        export_method: 'enterprise',
+        use_legacy_build_api: true
+    )
+
+    notify = '0'
+    if options[:notify] 
+    	notify = '1'
+    end
+
+    # ENV["HOCKEY_APP_TOKEN"] = "d0c9923fd5264b38b80c142e292a10ae"
+    hockey(
+       api_token: ENV["HOCKEY_APP_TOKEN"],
+       notes: options[:release_notes],
+       notify: notify
+     )
+
+  end
+
+  desc "Deploy a new version to the App Store"
+  lane :testflight do
+  	# TODO: deploy it in the testflight
+
+    # ENV["CODE_SIGN_IDENTITY"] = ENV["CODE_SIGN_RELEASE"]
+    increment_build_number(xcodeproj: ENV["XCODE_PROJECT"])
+    
+    gym(
+        clean: true,
+        workspace: ENV["XCODE_WORKSPACE"],
+        scheme:  ENV["XCODE_SCHEME_FLIGHT"],
+    )
+
+    #commit_version_bump(
+    #  message: 'Version Bump by fastlane',
+    #  xcodeproj: ENV["XCODE_PROJECT"],
+    #  force: false
+    #)
+    
+    #push_to_git_remote(
+    #  remote: 'origin',         # optional, default: 'origin'
+    #  local_branch: 'release',  # optional, aliased by 'branch', default: 'master'
+    #  remote_branch: 'release', # optional, default is set to local_branch
+    #  force: false,              # optional, default: false
+    #)
+    
+    pilot(
+      distribute_external: true
+    )
+  end
+
+  desc "Run All Tests"
+  lane :test do
+    scan(scheme: ENV["XCODE_SCHEME_TEST"],
+    	output_types: "html,junit",
+    	clean: true)
+  end
+
+  # You can define as many lanes as you want
+
+  after_all do |lane|
+    
+    if (ENV["SLACK_URL_TEAM"] && ENV["SLACK_URL_TEAM"].length != 0)
+      ENV["SLACK_URL"] = ENV["SLACK_URL_TEAM"]
+      slack(
+        message: "There is a new version of  #{ENV["APP_SIMPLE_NAME"]} available. Download it at #{Actions.lane_context[SharedValues::HOCKEY_DOWNLOAD_LINK]}",
+        success: true,
+        attachment_properties: { 
+          image_url: ENV["APP_ICON_FINAL"]
+        }
+      )
+    end
+    
+  end
+  
+  error do |lane, exception|
+    message = "🙈 Error while building  #{exception.message}"
+    if (ENV["SLACK_URL_TEAM"] && ENV["SLACK_URL_TEAM"].length != 0)
+      ENV["SLACK_URL"] = ENV["SLACK_URL_TEAM"]
+
+      slack(
+        message: message,
+        success: false,
+        attachment_properties: { 
+          image_url: ENV["APP_ICON_FINAL"]
+        }
+      )
+    end
+    
+    puts message
+    
+  end
+  
+end
+
+
+
+# More information about multiple platforms in fastlane: https://github.com/KrauseFx/fastlane/blob/master/docs/Platforms.md
+# All available actions: https://github.com/KrauseFx/fastlane/blob/master/docs/Actions.md
