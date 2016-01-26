@@ -50,7 +50,7 @@ platform :ios do
   	ENV["CODE_SIGN_IDENTITY"] = ENV["CODE_SIGN_RELEASE"]
   	reports_folder = "#{ENV['XCODE_BUILD_PATH']}/reports"
 
-    badge(custom: ENV["APP_ICON_DEV"])
+    badge(shield: "Build-#{options[:build_number]}-blue", custom: ENV["APP_ICON_DEV"])
 
     increment_build_number(build_number: options[:build_number])
 
