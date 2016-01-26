@@ -25,23 +25,28 @@ default_platform :ios
 platform :ios do
   before_all do    
 
+  dependencies
+
+  end
+
+  desc "Execute CocoaPods and Carthage"
+  lane :dependencies do 
     ENV["APP_ICON_DEV"] = "fastlane/dev-icon.png"
     xcode_select(ENV["XCODE_PATH"])
 
     if (ENV["BUILD_COCOAPODS"] == "true")
-    	cocoapods
-	  end
+      cocoapods
+    end
 
-	  if (ENV["BUILD_CARTHAGE"] == "true")
+    if (ENV["BUILD_CARTHAGE"] == "true")
       carthage(
-      	use_ssh: false,         # Use SSH for downloading GitHub repositories.
-      	use_submodules: false,  # Add dependencies as Git submodules.
-      	use_binaries: true,     # Check out dependency repositories even when prebuilt frameworks exist
-      	platform: "iOS",         # Define which platform to build for
-      	verbose: false
-    	)
-	  end
-    
+        use_ssh: false,         # Use SSH for downloading GitHub repositories.
+        use_submodules: false,  # Add dependencies as Git submodules.
+        use_binaries: true,     # Check out dependency repositories even when prebuilt frameworks exist
+        platform: "iOS",         # Define which platform to build for
+        verbose: false
+      )
+    end
   end
 
   desc "Submit a new Beta Build to Hockey App"
