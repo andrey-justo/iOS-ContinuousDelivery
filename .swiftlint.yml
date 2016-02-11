@@ -1,0 +1,24 @@
+disabled_rules:
+  - opening_brace
+  - valid_docs
+  - type_body_length
+  - nesting
+
+excluded:
+  - Carthage
+  - Pods
+
+line_length:
+  - 120
+
+type_body_length:
+  - 300
+
+variable_name_min_length:
+  - 2
+
+force_cast:
+  severity: warning
+
+force_try:
+  severity: warning

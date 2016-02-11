@@ -22,15 +22,17 @@ default_platform :ios
 
 # Check this example: https://github.com/fastlane/examples/blob/master/MindNode/Fastfile
 
+successMessage = "There is a new version of  #{ENV["APP_SIMPLE_NAME"]} available. Download it at #{Actions.lane_context[SharedValues::HOCKEY_DOWNLOAD_LINK]}"
+
 platform :ios do
-  before_all do    
+  before_all do
 
   dependencies
 
   end
 
   desc "Execute CocoaPods and Carthage"
-  lane :dependencies do 
+  lane :dependencies do
     ENV["APP_ICON_DEV"] = "fastlane/dev-icon.png"
     xcode_select(ENV["XCODE_PATH"])
 
@@ -68,7 +70,7 @@ platform :ios do
     )
 
     notify = '0'
-    if options[:notify] 
+    if options[:notify]
     	notify = '1'
     end
 
@@ -79,6 +81,8 @@ platform :ios do
        notify: notify
      )
 
+     successMessage = "There is a new version of  #{ENV["APP_SIMPLE_NAME"]} available. Download it at #{Actions.lane_context[SharedValues::HOCKEY_DOWNLOAD_LINK]}"
+
   end
 
   desc "Deploy a new version to the App Store"
@@ -87,7 +91,7 @@ platform :ios do
 
     # ENV["CODE_SIGN_IDENTITY"] = ENV["CODE_SIGN_RELEASE"]
     increment_build_number(xcodeproj: ENV["XCODE_PROJECT"])
-    
+
     gym(
         clean: true,
         workspace: ENV["XCODE_WORKSPACE"],
@@ -99,17 +103,19 @@ platform :ios do
     #  xcodeproj: ENV["XCODE_PROJECT"],
     #  force: false
     #)
-    
+
     #push_to_git_remote(
     #  remote: 'origin',         # optional, default: 'origin'
     #  local_branch: 'release',  # optional, aliased by 'branch', default: 'master'
     #  remote_branch: 'release', # optional, default is set to local_branch
     #  force: false,              # optional, default: false
     #)
-    
+
     pilot(
       distribute_external: true
     )
+
+    successMessage = "There is a new version of  #{ENV["APP_SIMPLE_NAME"]} available. Download it Test Flight"
   end
 
   desc "Run All Tests"
@@ -117,25 +123,35 @@ platform :ios do
     scan(scheme: ENV["XCODE_SCHEME_TEST"],
     	output_types: "html,junit",
     	clean: true)
+
+    successMessage = "Finished to run tests."
   end
 
-  # You can define as many lanes as you want
+  desc "Run swiftlint"
+  lane :lint do
+    swiftlint(
+      strict: false,
+      mode: :lint,                          # SwiftLint mode: :lint (default) or :autocorrect
+      output_file: 'swiftlint.result.json', # The path of the output file (optional)
+      config_file: '.swiftlint-ci.yml',     # The path of the configuration file (optional)
+    )
+  end
 
   after_all do |lane|
-    
+
     if (ENV["SLACK_URL_TEAM"] && ENV["SLACK_URL_TEAM"].length != 0)
       ENV["SLACK_URL"] = ENV["SLACK_URL_TEAM"]
       slack(
-        message: "There is a new version of  #{ENV["APP_SIMPLE_NAME"]} available. Download it at #{Actions.lane_context[SharedValues::HOCKEY_DOWNLOAD_LINK]}",
+        message: successMessage,
         success: true,
-        attachment_properties: { 
+        attachment_properties: {
           image_url: ENV["APP_ICON_FINAL"]
         }
       )
     end
-    
+
   end
-  
+
   error do |lane, exception|
     message = "🙈 Error while building  #{exception.message}"
     if (ENV["SLACK_URL_TEAM"] && ENV["SLACK_URL_TEAM"].length != 0)
@@ -144,16 +160,16 @@ platform :ios do
       slack(
         message: message,
         success: false,
-        attachment_properties: { 
+        attachment_properties: {
           image_url: ENV["APP_ICON_FINAL"]
         }
       )
     end
-    
+
     puts message
-    
+
   end
-  
+
 end
 
 
