@@ -131,16 +131,16 @@ platform :ios do
   lane :lint do
     lintFileConfiguration = ENV["LINT_FILE_CONFIGURATION"]
 
-    if(lintFileConfiguration && lintFileConfiguration.length != 0) {
+    if(lintFileConfiguration && lintFileConfiguration.length != 0)
       swiftlint(
         config_file: lintFileConfiguration,     # The path of the configuration file (optional)
         strict: false
       )
-    } else {
+    else 
       swiftlint(
         strict: false
       )
-    }
+    end
 
   end
 
